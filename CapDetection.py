@@ -5,8 +5,8 @@ import numpy as np
 
 
 class CapDetection():
-    """ 
-    利用霍夫圆检测得到候选区域. 
+    """
+    利用霍夫圆检测得到候选区域.
     """
 
     def __init__(self, imread_dir, imwrite_dir):

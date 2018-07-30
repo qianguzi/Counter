@@ -130,6 +130,3 @@ def pad2d(inputs, pad=(0, 0), mode='CONSTANT'):
     paddings = [[0, 0], [pad[0], pad[0]], [pad[1], pad[1]], [0, 0]]
     net = tf.pad(inputs, paddings, mode=mode)
     return net
-
-
-__all__ = ['conv2d_block', 'point_wise', 'bottleneck', 'global_avg', 'flatten']
