@@ -1,4 +1,5 @@
 import os
+import codecs, json
 from time import strftime, time
 
 import cv2
@@ -20,12 +21,12 @@ if __name__ == '__main__':
     saver = tf.train.Saver()
     saver.restore(sess, ckpt)
 
-    img_dir = '/media/jun/data/capdataset/box/classification/train/'
-    result_dir = '/media/jun/data/capdataset/box/classification/result_train/'
-    cirfile = '/media/jun/data/capdataset/box/classification/result_train/result.txt'
+    img_dir = '/media/jun/data/capdataset/detection/test/'
+    result_dir = '/media/jun/data/capdataset/detection/result_test/'
+    cirfile = '/media/jun/data/capdataset/detection/result_test.json'
     cap_types = [(6, 10), (5, 8), (6, 10), (6, 10), (5, 10)]
     boxes = CapDetection(img_dir, result_dir)
-    resultfile = open(cirfile, 'a')
+    result_boxes = {}
     for img_name in boxes.imgs:
         t = int(img_name[0])
         print(strftime("%X"), img_name + '检测开始...')
@@ -83,18 +84,16 @@ if __name__ == '__main__':
         print(strftime("%X"), img_name + '检测成功...')
 
         ##################写入结果##################################
-        result_img = boxes.draw_cir(
-            color_img, result_dense, rad=35, color=(0, 0, 255))
-        result_img = boxes.draw_cir(
-            result_img, result_sparse, rad=25, color=(255, 0, 0))
-        result_img = boxes.draw_cir(
-            result_img, result_cir, rad=15, color=(0, 255, 0))
-        cv2.imwrite(result_dir + img_name[:-4] + 'result.jpg', result_img)
-        resultfile.writelines('\n' + img_name[:-4] + 'result.jpg' + '--' +
-                              str(result_dense.shape[0]) + '+' + str(result_sparse.shape[0]))
+        #result_img = boxes.draw_cir(
+        #    color_img, result_dense, rad=35, color=(0, 0, 255))
+        #result_img = boxes.draw_cir(
+        #    result_img, result_sparse, rad=25, color=(255, 0, 0))
+        #result_img = boxes.draw_cir(
+        #    result_img, result_cir, rad=15, color=(0, 255, 0))
+        #cv2.imwrite(result_dir + img_name[:-4] + 'result.jpg', result_img)
+        #
         ################写入最终结果##############################
-        final_img = boxes.draw_rec(boxes.imgs[img_name], final, crop_size)
-        cv2.imwrite(result_dir + img_name[:-4] + 'final.jpg', final_img)
-        resultfile.writelines(
-            '\n' + img_name[:-4] + 'final.jpg' + '--' + str(final.shape[0]))
-    resultfile.close()
+        final_img, gt_boxes = boxes.draw_rec(boxes.imgs[img_name], final, t, crop_size)
+        #cv2.imwrite(result_dir + img_name[:-4] + 'final.jpg', final_img)
+        result_boxes[img_name[:-4]] = gt_boxes
+    json.dump(result_boxes, codecs.open(cirfile, 'w', encoding='utf-8'), separators=(',', ':'), indent=4)

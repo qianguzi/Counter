@@ -2,6 +2,7 @@ import os
 
 import numpy as np
 import tensorflow as tf
+from random import shuffle
 from matplotlib import pyplot as plt
 from PIL import Image
 
@@ -19,7 +20,8 @@ def create_tfrecord(filename, mapfile, dataset_path):
     ''' Covert Image dataset to tfrecord. '''
 
     class_map = {}
-    classes = ['0', '1']
+    label_map = []
+    classes = ['0', '1', '2']
     writer = tf.python_io.TFRecordWriter(filename)
 
     for index, class_name in enumerate(classes):
@@ -28,19 +30,23 @@ def create_tfrecord(filename, mapfile, dataset_path):
             index = 1
         class_map[index] = class_name
         for img_name in os.listdir(class_path):
-            img = Image.open(class_path + img_name)
-            img = img.convert("RGB")
-            img = img.resize((64, 64))
-            #img = img.resize((64, 64))
-            # print(np.array(img).shape)
-            img_raw = img.tobytes()
-            img_name = img_name.encode()
-            example = tf.train.Example(features=tf.train.Features(feature={
-                'label': _int64_feature(index),
-                'image_raw': _bytes_feature(img_raw),
-                'image_name': _bytes_feature(img_name)
-            }))
-            writer.write(example.SerializeToString())
+            label_map.append((class_path + img_name, index))
+    shuffle(label_map)
+    
+    for (img_path, index) in label_map:
+        img = Image.open(img_path)
+        img = img.convert("RGB")
+        img = img.resize((96, 96))
+        #img = img.resize((64, 64))
+        # print(np.array(img).shape)
+        img_raw = img.tobytes()
+        img_name = os.path.basename(img_path).encode()
+        example = tf.train.Example(features=tf.train.Features(feature={
+            'image_raw': _bytes_feature(img_raw),
+            'label': _int64_feature(index),
+            'image_name': _bytes_feature(img_name)
+        }))
+        writer.write(example.SerializeToString())
     writer.close()
     txtfile = open(mapfile, 'w+')
     for key in class_map.keys():
@@ -65,7 +71,7 @@ def read_tfrecord(filename, epochs, shuffle=True):
                   'image_name': tf.FixedLenFeature([], tf.string)})
     # 将字符串解析成图像对应的像素数组
     img = tf.decode_raw(features['image_raw'], tf.uint8)
-    img = tf.reshape(img, [64, 64, 3])
+    img = tf.reshape(img, [96, 96, 3])
     #img = tf.reshape(img, [64, 64, 3])
     #img = tf.cast(img, tf.float32)*1/255 - 0.5
     img = tf.cast(img, tf.float32)*1/127.5 - 1
@@ -115,7 +121,7 @@ def load(sess, saver, checkpoint_dir):
 
 
 if __name__ == '__main__':
-    mapfile = '../tfrecords/other_classmap.txt'
-    filename = '../tfrecords/other.tfrecords'
-    dataset_path = '/media/jun/data/capdataset/cap/others/'
+    mapfile = '../tfrecords/train_classmap.txt'
+    filename = '../tfrecords/train.tfrecords'
+    dataset_path = '/media/jun/data/capdataset/cap/train/'
     create_tfrecord(filename, mapfile, dataset_path)

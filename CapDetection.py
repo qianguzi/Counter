@@ -106,10 +106,25 @@ class CapDetection():
             cv2.circle(img, (i[0], i[1]), 2, color, 3)
         return img
 
-    def draw_rec(self, img, cir, crop_size=(45, 45)):
+    def draw_rec(self, img, cir, t, crop_size=(45, 45)):
         h, w = img.shape
         color_img = cv2.cvtColor(img, cv2.COLOR_GRAY2RGB)
-        for i in cir:
-            cv2.rectangle(color_img, (max(0, i[0]-int(0.8*crop_size[0])), max(0, i[1]-int(0.8*crop_size[1]))),
-                          (min(i[0]+int(0.8*crop_size[0]), w), min(i[1]+int(0.8*crop_size[1]), h)), (0, 255, 0), 2)
-        return color_img
+        gt_boxes = {}
+        for n, i in enumerate(cir):
+            if t == 4:
+                min_x = int(max(0, i[0]-0.6*crop_size[0]))
+                min_y = int(max(0, i[1]-0.9*crop_size[1]))
+                max_x = int(min(i[0]+0.6*crop_size[0], w))
+                max_y = int(min(i[1]+0.9*crop_size[1], h))
+            else:
+                min_x = int(max(0, i[0]-0.7*crop_size[0]))
+                min_y = int(max(0, i[1]-0.7*crop_size[1]))
+                max_x = int(min(i[0]+0.7*crop_size[0], w))
+                max_y = int(min(i[1]+0.7*crop_size[1], h))
+            cv2.rectangle(color_img, (min_x, min_y),
+                          (max_x, max_y), (0, 255, 0), 2)
+            cv2.putText(color_img, 'box' + str(n+1), (i[0], i[1]),
+                        cv2.FONT_HERSHEY_COMPLEX, 0.5, (0, 0, 255), 1)
+            gt_box = [min_x, min_y, max_x, max_y]
+            gt_boxes['box'+str(n+1)] = gt_box
+        return color_img, gt_boxes
