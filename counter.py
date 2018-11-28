@@ -15,7 +15,7 @@ if __name__ == '__main__':
     _, pred, _ = mobilenetv2(inputs, wid=3, num_classes=2, is_train=False)
     y = tf.argmax(pred, 1)
 
-    ckpt = '../checkpoints/64x64-128-0.95-0.001-wid3/mobilenetv2-17'
+    ckpt = '../checkpoints/64x64-128-0.95-0.001-wid3/model'
     sess = tf.Session()
     # saver for restore model
     saver = tf.train.Saver()
